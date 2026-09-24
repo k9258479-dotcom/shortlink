@@ -201,13 +201,34 @@ export function getUpstashClient(): Redis | null {
   return null;
 }
 
-export function setCustomUpstashCredentials(url: string, token: string) {
-  let cleanUrl = url.trim().replace(/\/+$/, '');
-  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
-    cleanUrl = `https://${cleanUrl}`;
+export function sanitizeUpstashUrl(url: string): string {
+  let cleaned = (url || '').trim();
+  // Strip variable name prefix if copied from .env
+  cleaned = cleaned.replace(/^UPSTASH_REDIS_REST_URL\s*=\s*/i, '');
+  // Strip wrapping quotes
+  cleaned = cleaned.replace(/^['"]|['"]$/g, '');
+  // Replace unicode en-dash, em-dash, and minus characters with ASCII hyphen '-'
+  cleaned = cleaned.replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+  // Strip trailing slashes
+  cleaned = cleaned.trim().replace(/\/+$/, '');
+  if (cleaned && !cleaned.startsWith('http://') && !cleaned.startsWith('https://')) {
+    cleaned = `https://${cleaned}`;
   }
-  customUpstashUrl = cleanUrl;
-  customUpstashToken = token.trim();
+  return cleaned;
+}
+
+export function sanitizeUpstashToken(token: string): string {
+  let cleaned = (token || '').trim();
+  // Strip variable name prefix if copied from .env
+  cleaned = cleaned.replace(/^UPSTASH_REDIS_REST_TOKEN\s*=\s*/i, '');
+  // Strip wrapping quotes
+  cleaned = cleaned.replace(/^['"]|['"]$/g, '');
+  return cleaned.trim();
+}
+
+export function setCustomUpstashCredentials(url: string, token: string) {
+  customUpstashUrl = sanitizeUpstashUrl(url);
+  customUpstashToken = sanitizeUpstashToken(token);
   upstashClient = null; // force re-init
 }
 

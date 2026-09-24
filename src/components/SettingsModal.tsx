@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Database, Shield, Check, AlertCircle, RefreshCw, Key } from 'lucide-react';
+import { Database, Shield, Check, AlertCircle, RefreshCw, Key, Eye, EyeOff } from 'lucide-react';
 
 interface SettingsModalProps {
   storageStatus: {
@@ -23,15 +23,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [upstashUrl, setUpstashUrl] = useState('');
   const [upstashToken, setUpstashToken] = useState('');
+  const [showToken, setShowToken] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [testResult, setTestResult] = useState<any | null>(null);
   const [tokenInput, setTokenInput] = useState(currentAdminToken);
   const [tokenSaved, setTokenSaved] = useState(false);
 
+  // Auto clean URL: strip variable prefixes, quotes, normalize unicode dashes, strip trailing slashes
+  const handleUrlChange = (val: string) => {
+    let clean = val.replace(/^UPSTASH_REDIS_REST_URL\s*=\s*/i, '');
+    clean = clean.replace(/^['"]|['"]$/g, '');
+    clean = clean.replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-');
+    setUpstashUrl(clean);
+  };
+
+  // Auto clean Token: strip variable prefixes, quotes, trim whitespace
+  const handleTokenChange = (val: string) => {
+    let clean = val.replace(/^UPSTASH_REDIS_REST_TOKEN\s*=\s*/i, '');
+    clean = clean.replace(/^['"]|['"]$/g, '');
+    setUpstashToken(clean.trim());
+  };
+
   const handleTestAndSaveUpstash = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanUrl = upstashUrl.trim().replace(/\/+$/, '');
+    let cleanUrl = upstashUrl.trim().replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-').replace(/\/+$/, '');
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+      cleanUrl = `https://${cleanUrl}`;
+    }
     const cleanToken = upstashToken.trim();
 
     if (!cleanUrl || !cleanToken) return;
@@ -134,31 +153,72 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Form */}
         <form onSubmit={handleTestAndSaveUpstash} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1">
-              UPSTASH_REDIS_REST_URL
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-medium text-neutral-300">
+                UPSTASH_REDIS_REST_URL
+              </label>
+              {upstashUrl && (
+                <span className="text-[10px] text-neutral-500 font-mono">
+                  {upstashUrl.includes('.upstash.io') ? '✓ valid domain' : 'dapat nagtatapos sa .upstash.io'}
+                </span>
+              )}
+            </div>
             <input
               type="text"
               required
               value={upstashUrl}
-              onChange={(e) => setUpstashUrl(e.target.value)}
+              onChange={(e) => handleUrlChange(e.target.value)}
               placeholder="https://flexible-mullet-294948.upstash.io"
               className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1">
-              UPSTASH_REDIS_REST_TOKEN
-            </label>
-            <input
-              type="password"
-              required
-              value={upstashToken}
-              onChange={(e) => setUpstashToken(e.target.value)}
-              placeholder="AXb7ACQgZTA0YjFlMmMtMGZhZS00Y2..."
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-medium text-neutral-300">
+                UPSTASH_REDIS_REST_TOKEN
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                className="text-[11px] text-neutral-400 hover:text-white flex items-center gap-1 transition"
+              >
+                {showToken ? (
+                  <>
+                    <EyeOff className="w-3.5 h-3.5" />
+                    <span>Hide Token</span>
+                  </>
+                ) : (
+                  <>
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Show Token</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showToken ? 'text' : 'password'}
+                required
+                value={upstashToken}
+                onChange={(e) => handleTokenChange(e.target.value)}
+                placeholder="AXb7ACQgZTA0YjFlMmMtMGZhZS00Y2..."
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 pr-10 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowToken(!showToken)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition"
+              >
+                {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {upstashToken && !upstashToken.startsWith('AX') && upstashToken.length < 35 && (
+              <p className="mt-1 text-[11px] text-amber-400/90 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                Paalala: Ang REST token ay karaniwang mahaba at nagsisimula sa <strong>AX...</strong>. Paki-verify kung kinuha ito mula sa REST API tab (hindi CLI password).
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">

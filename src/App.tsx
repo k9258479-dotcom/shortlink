@@ -162,24 +162,36 @@ export default function App() {
   };
 
   const handleUpdateUpstash = async (url: string, token: string) => {
-    try {
-      const res = await fetch('/api/config/upstash', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim(), token: token.trim() }),
-      });
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('Server connection was interrupted. Please retry in a moment.');
+    let lastError = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const res = await fetch('/api/config/upstash', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, token }),
+        });
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 600));
+            continue;
+          }
+          throw new Error('Server connection was interrupted. Please retry in a moment.');
+        }
+        const data = await res.json();
+        setStorageStatus(data);
+        await fetchData();
+        return data;
+      } catch (err: any) {
+        lastError = err;
+        if (attempt === 0) {
+          await new Promise((r) => setTimeout(r, 600));
+          continue;
+        }
       }
-      const data = await res.json();
-      setStorageStatus(data);
-      await fetchData();
-      return data;
-    } catch (err: any) {
-      console.error('Failed to configure Upstash:', err);
-      throw new Error(err.message || 'Connection error');
     }
+    console.error('Failed to configure Upstash:', lastError);
+    throw new Error(lastError?.message || 'Connection error. Please retry in a moment.');
   };
 
   const handleResetStorage = async () => {
