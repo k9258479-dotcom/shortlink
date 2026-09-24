@@ -202,9 +202,19 @@ export function getUpstashClient(): Redis | null {
 }
 
 export function setCustomUpstashCredentials(url: string, token: string) {
-  customUpstashUrl = url.trim();
+  let cleanUrl = url.trim().replace(/\/+$/, '');
+  if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+    cleanUrl = `https://${cleanUrl}`;
+  }
+  customUpstashUrl = cleanUrl;
   customUpstashToken = token.trim();
   upstashClient = null; // force re-init
+}
+
+export function resetToLocalKvStorage() {
+  customUpstashUrl = '';
+  customUpstashToken = '';
+  upstashClient = null;
 }
 
 export async function checkStorageStatus(): Promise<{
@@ -221,7 +231,16 @@ export async function checkStorageStatus(): Promise<{
       const latencyMs = Date.now() - start;
       return { connected: true, provider: 'upstash', latencyMs };
     } catch (err: any) {
-      return { connected: false, provider: 'upstash', error: err?.message || 'Connection failed' };
+      const rawMsg = err?.message || 'Connection failed';
+      let friendlyMsg = rawMsg;
+      if (rawMsg.includes('WRONGPASS') || rawMsg.includes('auth token') || rawMsg.includes('unauthorized')) {
+        friendlyMsg = 'Invalid REST Token (WRONGPASS). Siguraduhing kinopya ang "UPSTASH_REDIS_REST_TOKEN" mula sa REST API tab sa console.upstash.com, hindi ang Redis CLI password.';
+      } else if (rawMsg.includes('ENOTFOUND') || rawMsg.includes('getaddrinfo') || rawMsg.includes('fetch failed')) {
+        friendlyMsg = 'Hindi ma-reach ang Upstash URL. Paki-check kung tama ang address (dapat nagtatapos sa .upstash.io).';
+      } else if (rawMsg.includes('Unable to parse') || rawMsg.includes('is not valid JSON')) {
+        friendlyMsg = 'Invalid response mula sa Upstash REST endpoint. Siguraduhing walang extra path o slash sa dulo ng URL.';
+      }
+      return { connected: false, provider: 'upstash', error: friendlyMsg };
     }
   }
 

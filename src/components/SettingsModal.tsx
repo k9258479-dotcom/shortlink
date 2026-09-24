@@ -9,6 +9,7 @@ interface SettingsModalProps {
     error?: string;
   };
   onUpdateUpstash: (url: string, token: string) => Promise<any>;
+  onResetStorage?: () => Promise<any>;
   currentAdminToken: string;
   onUpdateAdminToken: (token: string) => void;
 }
@@ -16,29 +17,49 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   storageStatus,
   onUpdateUpstash,
+  onResetStorage,
   currentAdminToken,
   onUpdateAdminToken,
 }) => {
   const [upstashUrl, setUpstashUrl] = useState('');
   const [upstashToken, setUpstashToken] = useState('');
   const [isTesting, setIsTesting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [testResult, setTestResult] = useState<any | null>(null);
   const [tokenInput, setTokenInput] = useState(currentAdminToken);
   const [tokenSaved, setTokenSaved] = useState(false);
 
   const handleTestAndSaveUpstash = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!upstashUrl || !upstashToken) return;
+    const cleanUrl = upstashUrl.trim().replace(/\/+$/, '');
+    const cleanToken = upstashToken.trim();
+
+    if (!cleanUrl || !cleanToken) return;
 
     setIsTesting(true);
     setTestResult(null);
     try {
-      const res = await onUpdateUpstash(upstashUrl, upstashToken);
+      const res = await onUpdateUpstash(cleanUrl, cleanToken);
       setTestResult(res);
     } catch (err: any) {
       setTestResult({ connected: false, error: err.message });
     } finally {
       setIsTesting(false);
+    }
+  };
+
+  const handleRevertToLocal = async () => {
+    if (!onResetStorage) return;
+    setIsResetting(true);
+    try {
+      const res = await onResetStorage();
+      setTestResult(res);
+      setUpstashUrl('');
+      setUpstashToken('');
+    } catch (err: any) {
+      setTestResult({ connected: false, error: err.message });
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -81,13 +102,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Informational callout */}
-        <div className="p-3 bg-neutral-950 rounded-lg border border-neutral-800 text-xs text-neutral-400 space-y-1">
+        <div className="p-3.5 bg-neutral-950 rounded-lg border border-neutral-800 text-xs text-neutral-400 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-neutral-200">💡 Local KV is Ready & Active</span>
+            {storageStatus.provider === 'upstash' && (
+              <button
+                type="button"
+                onClick={handleRevertToLocal}
+                disabled={isResetting}
+                className="text-xs text-amber-400 hover:text-amber-300 underline font-medium"
+              >
+                {isResetting ? 'Switching...' : 'Switch back to Local KV'}
+              </button>
+            )}
+          </div>
           <p>
-            <strong className="text-neutral-200">How it works:</strong> If you don't enter an Upstash Redis URL, CloakFlow automatically runs in <strong>Local Persistent KV mode</strong>, preserving your links and logs across sessions.
+            Kahit walang Upstash Redis, <strong>100% functional na ang CloakFlow</strong> gamit ang built-in <strong>Local Persistent KV</strong>. Naka-save ang lahat ng short links at visit logs mo.
           </p>
-          <p>
-            When you're ready to deploy to Vercel, simply create a free Redis database at <a href="https://console.upstash.com" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">console.upstash.com</a> and paste the credentials below to test live!
-          </p>
+          <div className="p-2.5 rounded bg-neutral-900 border border-neutral-800 text-[11px] text-neutral-300 space-y-1">
+            <div className="font-medium text-indigo-300">Paano kunin ang tamang Upstash Credentials:</div>
+            <ol className="list-decimal list-inside space-y-0.5 text-neutral-400">
+              <li>Pumunta sa <a href="https://console.upstash.com" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">console.upstash.com</a> at i-click ang iyong Redis Database.</li>
+              <li>Mag-scroll pababa sa <strong>REST API</strong> section (i-click ang <strong>.env</strong> tab).</li>
+              <li>Kopyahin ang <code className="text-neutral-200 bg-neutral-800 px-1 rounded">UPSTASH_REDIS_REST_URL</code> (hal. https://...upstash.io).</li>
+              <li>Kopyahin ang <code className="text-neutral-200 bg-neutral-800 px-1 rounded">UPSTASH_REDIS_REST_TOKEN</code> (mahabang key na nagsisimula sa AX...).</li>
+              <li className="text-amber-400 font-medium">Huwag kopyahin ang Redis CLI password o Read-Only token!</li>
+            </ol>
+          </div>
         </div>
 
         {/* Form */}
@@ -97,11 +138,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               UPSTASH_REDIS_REST_URL
             </label>
             <input
-              type="url"
+              type="text"
               required
               value={upstashUrl}
               onChange={(e) => setUpstashUrl(e.target.value)}
-              placeholder="https://glorious-whale-1234.upstash.io"
+              placeholder="https://flexible-mullet-294948.upstash.io"
               className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
             />
           </div>
@@ -120,7 +161,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
             <div>
               {testResult && (
                 <div className="text-xs">
@@ -130,29 +171,44 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Connected to Upstash! Latency: {testResult.latencyMs}ms
                     </span>
                   ) : (
-                    <span className="text-red-400 flex items-center gap-1.5">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      {testResult.error || 'Failed to ping Upstash'}
-                    </span>
+                    <div className="text-red-400 flex items-start gap-1.5 max-w-md">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-semibold">Error sa Koneksyon:</div>
+                        <div className="text-[11px] text-neutral-400">{testResult.error || 'Failed to ping Upstash'}</div>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={isTesting}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
-            >
-              {isTesting ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  Testing Ping...
-                </>
-              ) : (
-                'Save & Test Upstash Connection'
+            <div className="flex items-center gap-2">
+              {storageStatus.provider === 'upstash' && (
+                <button
+                  type="button"
+                  onClick={handleRevertToLocal}
+                  disabled={isResetting}
+                  className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg text-xs font-medium transition"
+                >
+                  Use Local KV
+                </button>
               )}
-            </button>
+              <button
+                type="submit"
+                disabled={isTesting}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+              >
+                {isTesting ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    Testing Ping...
+                  </>
+                ) : (
+                  'Save & Test Upstash Connection'
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

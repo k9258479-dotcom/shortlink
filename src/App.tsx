@@ -162,15 +162,36 @@ export default function App() {
   };
 
   const handleUpdateUpstash = async (url: string, token: string) => {
-    const res = await fetch('/api/config/upstash', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, token }),
-    });
-    const data = await res.json();
-    setStorageStatus(data);
-    await fetchData();
-    return data;
+    try {
+      const res = await fetch('/api/config/upstash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url.trim(), token: token.trim() }),
+      });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Server connection was interrupted. Please retry in a moment.');
+      }
+      const data = await res.json();
+      setStorageStatus(data);
+      await fetchData();
+      return data;
+    } catch (err: any) {
+      console.error('Failed to configure Upstash:', err);
+      throw new Error(err.message || 'Connection error');
+    }
+  };
+
+  const handleResetStorage = async () => {
+    try {
+      const res = await fetch('/api/config/upstash/reset', { method: 'POST' });
+      const data = await res.json();
+      setStorageStatus(data);
+      await fetchData();
+      return data;
+    } catch (err: any) {
+      console.error('Failed to reset storage:', err);
+    }
   };
 
   const handleUpdateAdminToken = (newToken: string) => {
@@ -264,6 +285,7 @@ export default function App() {
           <SettingsModal
             storageStatus={storageStatus}
             onUpdateUpstash={handleUpdateUpstash}
+            onResetStorage={handleResetStorage}
             currentAdminToken={adminToken}
             onUpdateAdminToken={handleUpdateAdminToken}
           />

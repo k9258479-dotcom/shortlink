@@ -15,6 +15,7 @@ import {
   clearAllLogs,
   checkStorageStatus,
   setCustomUpstashCredentials,
+  resetToLocalKvStorage,
 } from './src/lib/kv-store.js';
 import { NEXTJS_EXPORT_FILES } from './src/lib/nextjs-export.js';
 import JSZip from 'jszip';
@@ -340,6 +341,17 @@ async function startServer() {
         return res.status(400).json({ error: 'URL and Token are required' });
       }
       setCustomUpstashCredentials(url, token);
+      const status = await checkStorageStatus();
+      res.json(status);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // POST /api/config/upstash/reset - reset back to Local Persistent KV
+  app.post('/api/config/upstash/reset', async (_req: Request, res: Response) => {
+    try {
+      resetToLocalKvStorage();
       const status = await checkStorageStatus();
       res.json(status);
     } catch (err: any) {
