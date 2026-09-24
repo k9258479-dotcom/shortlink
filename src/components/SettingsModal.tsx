@@ -1,0 +1,232 @@
+import React, { useState } from 'react';
+import { Database, Shield, Check, AlertCircle, RefreshCw, Key } from 'lucide-react';
+
+interface SettingsModalProps {
+  storageStatus: {
+    connected: boolean;
+    provider: 'upstash' | 'local_kv';
+    latencyMs?: number;
+    error?: string;
+  };
+  onUpdateUpstash: (url: string, token: string) => Promise<any>;
+  currentAdminToken: string;
+  onUpdateAdminToken: (token: string) => void;
+}
+
+export const SettingsModal: React.FC<SettingsModalProps> = ({
+  storageStatus,
+  onUpdateUpstash,
+  currentAdminToken,
+  onUpdateAdminToken,
+}) => {
+  const [upstashUrl, setUpstashUrl] = useState('');
+  const [upstashToken, setUpstashToken] = useState('');
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<any | null>(null);
+  const [tokenInput, setTokenInput] = useState(currentAdminToken);
+  const [tokenSaved, setTokenSaved] = useState(false);
+
+  const handleTestAndSaveUpstash = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!upstashUrl || !upstashToken) return;
+
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+      const res = await onUpdateUpstash(upstashUrl, upstashToken);
+      setTestResult(res);
+    } catch (err: any) {
+      setTestResult({ connected: false, error: err.message });
+    } finally {
+      setIsTesting(false);
+    }
+  };
+
+  const handleSaveToken = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateAdminToken(tokenInput);
+    setTokenSaved(true);
+    setTimeout(() => setTokenSaved(false), 2000);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Upstash Redis Configuration */}
+      <div className="rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+          <div>
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <Database className="w-4 h-4 text-indigo-400" />
+              <span>Database & Upstash Redis Integration</span>
+            </h2>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              Connect your free Upstash Redis database to store links, counters, and logs across edge instances.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs font-mono">
+            <span className="text-neutral-500">Status:</span>
+            {storageStatus.connected ? (
+              <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                {storageStatus.provider === 'upstash' ? 'Upstash Connected' : 'Local Persistent KV (Active)'}
+              </span>
+            ) : (
+              <span className="text-red-400 font-semibold flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5" />
+                Connection Error
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Informational callout */}
+        <div className="p-3 bg-neutral-950 rounded-lg border border-neutral-800 text-xs text-neutral-400 space-y-1">
+          <p>
+            <strong className="text-neutral-200">How it works:</strong> If you don't enter an Upstash Redis URL, CloakFlow automatically runs in <strong>Local Persistent KV mode</strong>, preserving your links and logs across sessions.
+          </p>
+          <p>
+            When you're ready to deploy to Vercel, simply create a free Redis database at <a href="https://console.upstash.com" target="_blank" rel="noreferrer" className="text-indigo-400 hover:underline">console.upstash.com</a> and paste the credentials below to test live!
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleTestAndSaveUpstash} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-neutral-300 mb-1">
+              UPSTASH_REDIS_REST_URL
+            </label>
+            <input
+              type="url"
+              required
+              value={upstashUrl}
+              onChange={(e) => setUpstashUrl(e.target.value)}
+              placeholder="https://glorious-whale-1234.upstash.io"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-neutral-300 mb-1">
+              UPSTASH_REDIS_REST_TOKEN
+            </label>
+            <input
+              type="password"
+              required
+              value={upstashToken}
+              onChange={(e) => setUpstashToken(e.target.value)}
+              placeholder="AXb7ACQgZTA0YjFlMmMtMGZhZS00Y2..."
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <div>
+              {testResult && (
+                <div className="text-xs">
+                  {testResult.connected ? (
+                    <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5" />
+                      Connected to Upstash! Latency: {testResult.latencyMs}ms
+                    </span>
+                  ) : (
+                    <span className="text-red-400 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      {testResult.error || 'Failed to ping Upstash'}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={isTesting}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1.5"
+            >
+              {isTesting ? (
+                <>
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  Testing Ping...
+                </>
+              ) : (
+                'Save & Test Upstash Connection'
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Admin Password / Token */}
+      <div className="rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6 space-y-4">
+        <div className="pb-3 border-b border-neutral-800">
+          <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <Key className="w-4 h-4 text-emerald-400" />
+            <span>Admin Authentication Token</span>
+          </h2>
+          <p className="text-xs text-neutral-400 mt-0.5">
+            Password or token required to access the dashboard on <code className="text-neutral-300 font-mono">/admin</code>.
+          </p>
+        </div>
+
+        <form onSubmit={handleSaveToken} className="space-y-3">
+          <div>
+            <label className="block text-xs font-medium text-neutral-300 mb-1">
+              Admin Access Token
+            </label>
+            <input
+              type="text"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              placeholder="admin123"
+              className="w-full max-w-md bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-semibold transition"
+            >
+              Update Admin Token
+            </button>
+            {tokenSaved && (
+              <span className="text-xs text-emerald-400 flex items-center gap-1">
+                <Check className="w-3.5 h-3.5" />
+                Updated!
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+
+      {/* Meta Crawler Rules Reference */}
+      <div className="rounded-xl border border-neutral-800/80 bg-neutral-900/40 p-6 space-y-3">
+        <h3 className="text-sm font-semibold text-white">Active Meta Crawler User-Agent Patterns</h3>
+        <p className="text-xs text-neutral-400">
+          The edge middleware matches against the following official Meta signatures:
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">facebookexternalhit</span> (OpenGraph scraper)
+          </div>
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">Facebot</span> (Facebook page indexer)
+          </div>
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">MetaInspector</span> (Ad policy compliance checker)
+          </div>
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">facebookcatalog</span> (Commerce feed crawler)
+          </div>
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">meta-externalagent</span> (Meta AI & Ad reviewer)
+          </div>
+          <div className="p-2.5 bg-neutral-950 rounded border border-neutral-800 text-neutral-300">
+            <span className="text-indigo-400">meta-externalfetcher</span> (Background asset fetcher)
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

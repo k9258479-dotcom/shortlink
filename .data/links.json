@@ -1,0 +1,53 @@
+{
+  "offer1": {
+    "slug": "offer1",
+    "destinationUrl": "https://www.lazada.sg/products/wireless-noise-cancelling-headphones-i102938475.html?spm=a2o42.searchlist.offer1",
+    "complianceTitle": "Premium Wireless Noise Cancelling Headphones - Verified Review",
+    "complianceDescription": "Comprehensive test results, soundstage benchmarks, battery life measurements, and verified authentic customer ratings.",
+    "ogImage": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&h=630&fit=crop",
+    "brandName": "AudioLab Reviews",
+    "category": "Electronics & Audio",
+    "createdAt": 1790054120940,
+    "updatedAt": 1790140520940,
+    "totalClicks": 44,
+    "userClicks": 36,
+    "crawlerVisits": 8,
+    "lastMetaInspection": 1790226925673,
+    "lastUserClick": 1790226923327,
+    "isActive": true
+  },
+  "lazada-mega": {
+    "slug": "lazada-mega",
+    "destinationUrl": "https://www.lazada.com.my/tag/smartphones-sale/?spm=a2o4k.home.categories",
+    "complianceTitle": "Official 2026 Flagship Smartphone Buyer Guide & Specs",
+    "complianceDescription": "Technical performance review, camera comparisons, battery longevity metrics, and warranty guarantee information.",
+    "ogImage": "https://images.unsplash.com/photo-1511707171634-5f897ff02560?w=1200&h=630&fit=crop",
+    "brandName": "TechRadar Buyer Guide",
+    "category": "Consumer Electronics",
+    "createdAt": 1789794920940,
+    "updatedAt": 1790054120940,
+    "totalClicks": 118,
+    "userClicks": 94,
+    "crawlerVisits": 24,
+    "lastMetaInspection": 1790223320940,
+    "lastUserClick": 1790225420940,
+    "isActive": true
+  },
+  "flash-sale": {
+    "slug": "flash-sale",
+    "destinationUrl": "https://www.lazada.co.th/products/smart-fitness-tracker-watch-waterproof-i8492019.html",
+    "complianceTitle": "Ergonomic Smart Fitness Tracker & Health Monitor Guide",
+    "complianceDescription": "In-depth overview of bio-metric tracking precision, water resistance ratings, and everyday fitness styling.",
+    "ogImage": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&h=630&fit=crop",
+    "brandName": "Consumer Health Journal",
+    "category": "Health & Wearables",
+    "createdAt": 1789622120940,
+    "updatedAt": 1789967720940,
+    "totalClicks": 79,
+    "userClicks": 68,
+    "crawlerVisits": 11,
+    "lastMetaInspection": 1790198120940,
+    "lastUserClick": 1790224220940,
+    "isActive": true
+  }
+}

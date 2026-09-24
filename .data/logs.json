@@ -1,0 +1,74 @@
+[
+  {
+    "id": "log-b2cu0bc-1790226925673",
+    "slug": "offer1",
+    "timestamp": 1790226925673,
+    "isCrawler": true,
+    "crawlerType": "facebookexternalhit (Meta OpenGraph Scraper)",
+    "userAgent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+    "ip": "127.0.0.1",
+    "referrer": "",
+    "actionTaken": "compliance_html",
+    "destination": "Safe HTML Compliance Page"
+  },
+  {
+    "id": "log-aewmoqd-1790226923327",
+    "slug": "offer1",
+    "timestamp": 1790226923327,
+    "isCrawler": false,
+    "crawlerType": null,
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X)",
+    "ip": "127.0.0.1",
+    "referrer": "",
+    "actionTaken": "redirect_307",
+    "destination": "https://www.lazada.sg/products/wireless-noise-cancelling-headphones-i102938475.html?spm=a2o42.searchlist.offer1"
+  },
+  {
+    "id": "log-1",
+    "slug": "offer1",
+    "timestamp": 1790212520940,
+    "isCrawler": true,
+    "crawlerType": "facebookexternalhit (Meta OpenGraph Scraper)",
+    "userAgent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+    "ip": "31.13.115.10",
+    "referrer": "https://facebook.com",
+    "actionTaken": "compliance_html",
+    "destination": "Safe HTML Compliance Page"
+  },
+  {
+    "id": "log-2",
+    "slug": "offer1",
+    "timestamp": 1790226200940,
+    "isCrawler": false,
+    "crawlerType": null,
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+    "ip": "118.200.41.98",
+    "referrer": "https://m.facebook.com/",
+    "actionTaken": "redirect_307",
+    "destination": "https://www.lazada.sg/products/wireless-noise-cancelling-headphones-i102938475.html?spm=a2o42.searchlist.offer1"
+  },
+  {
+    "id": "log-3",
+    "slug": "lazada-mega",
+    "timestamp": 1790223320940,
+    "isCrawler": true,
+    "crawlerType": "Facebot (Meta Page Indexer)",
+    "userAgent": "Facebot",
+    "ip": "69.171.251.22",
+    "referrer": "https://facebook.com",
+    "actionTaken": "compliance_html",
+    "destination": "Safe HTML Compliance Page"
+  },
+  {
+    "id": "log-4",
+    "slug": "lazada-mega",
+    "timestamp": 1790225420940,
+    "isCrawler": false,
+    "crawlerType": null,
+    "userAgent": "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 Chrome/122.0.0.0 Mobile Safari/537.36",
+    "ip": "202.168.85.12",
+    "referrer": "https://l.facebook.com/",
+    "actionTaken": "redirect_307",
+    "destination": "https://www.lazada.com.my/tag/smartphones-sale/?spm=a2o4k.home.categories"
+  }
+]

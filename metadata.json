@@ -1,0 +1,7 @@
+{
+  "name": "CloakFlow - Meta Crawler Link Cloaker & Shortener",
+  "description": "High-performance edge dynamic link shortener with Meta crawler detection, safe compliance preview serving, real-time analytics, and instant Vercel Next.js export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
